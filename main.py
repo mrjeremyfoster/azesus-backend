@@ -1,21 +1,22 @@
 from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from openai import OpenAI
+from fastapi.middleware.cors import CORSMiddleware
 import os
+from openai import OpenAI
 
-# ---------- CONFIG ----------
+# =========================
+# OPENAI CLIENT
+# =========================
 
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
-if not OPENAI_API_KEY:
-    raise ValueError("OPENAI_API_KEY is not set")
-
-client = OpenAI(api_key=OPENAI_API_KEY)
+# =========================
+# FASTAPI APP
+# =========================
 
 app = FastAPI()
 
-# Allow requests from anywhere (important for your app)
+# Allow requests from anywhere (important for mobile app)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -24,12 +25,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ---------- DATA MODEL ----------
+# =========================
+# DATA MODEL
+# =========================
 
 class QueryRequest(BaseModel):
     query: str
 
-# ---------- ROUTES ----------
+# =========================
+# ROUTES
+# =========================
 
 @app.get("/")
 def root():
@@ -55,3 +60,9 @@ async def ask(request: QueryRequest):
 
         return {
             "response": answer
+        }
+
+    except Exception as e:
+        return {
+            "error": str(e)
+        }
